@@ -2,6 +2,8 @@ package com.xm.usercenter.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xm.usercenter.common.ErrorCode;
+import com.xm.usercenter.exception.BusinessException;
 import com.xm.usercenter.model.domain.User;
 import com.xm.usercenter.mapper.UserMapper;
 import com.xm.usercenter.service.UserService;
@@ -37,17 +39,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public Long userRegister(String userAccount, String userPassword, String checkPassword, String pandaCode) {
         //1.validate
         if(StringUtils.isAnyBlank(userAccount,userPassword,checkPassword,pandaCode)){
-            //todo throw exception
-            return -1L;
+            //
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         if(userAccount.length()<4){
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"account length less than 4");
         }
         if(userPassword.length()<8){
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         if(pandaCode.length()>5){
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
 
@@ -63,11 +65,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         Matcher matcher = Pattern.compile(regex).matcher(userAccount);
 
         if(!matcher.matches()){
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"account contains special symbols");
         }
 
         if(!userPassword.equals(checkPassword)){
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"password and checkpassword are not same");
         }
 
         //user account can not be existed
@@ -75,14 +77,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.eq("userAccount", userAccount);
         long count = userMapper.selectCount(queryWrapper);
         if(count>0){
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"account existed");
         }
 
         QueryWrapper<User> queryWrapper2 = new QueryWrapper<>();
         queryWrapper2.eq("pandaCode", pandaCode);
         long count2 = userMapper.selectCount(queryWrapper2);
         if(count2>0){
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
         //2. encode
